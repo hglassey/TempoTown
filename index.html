@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempo Town</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            font-weight: 600;
+        }
+        .slider-container {
+            margin: 30px 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .slider {
+            width: 100%;
+            margin: 15px 0;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .stop-button {
+            background-color: #dc3545;
+            margin-left: 10px;
+        }
+        .stop-button:hover {
+            background-color: #c82333;
+        }
+        .repeat-container {
+            margin: 20px 0;
+        }
+        .repeat-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .value-display {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 16px;
+        }
+        .preset-select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .preset-select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tempo Town</h1>
+    
+    <div class="button-container">
+        <button id="startButton">Start</button>
+        <button id="stopButton" class="stop-button">Stop</button>
+    </div>
+
+    <div class="repeat-container">
+        <div class="repeat-toggle">
+            <label class="toggle-switch">
+                <input type="checkbox" id="repeatToggle">
+                <span class="toggle-slider"></span>
+            </label>
+            <span>Repeat</span>
+        </div>
+    </div>
+    
+    <div class="slider-container">
+        <label for="secondDingSlider">Backswing (1.5s - 0.5s):</label>
+        <input type="range" id="secondDingSlider" class="slider" min="0.5" max="1.5" step="0.05" value="1.0">
+        <div class="value-display" id="secondDingValue">1.0s</div>
+    </div>
+    
+    <div class="slider-container">
+        <label for="thirdDingSlider">Impact (1.0s - 0.2s):</label>
+        <input type="range" id="thirdDingSlider" class="slider" min="0.2" max="1.0" step="0.05" value="0.6">
+        <div class="value-display" id="thirdDingValue">0.6s</div>
+    </div>
+
+    <div class="slider-container">
+        <label for="presetSelect">Preset Tempo:</label>
+        <select id="presetSelect" class="preset-select">
+            <option value="custom">Custom</option>
+            <option value="twoToOne">2/1 Tempo</option>
+            <option value="threeToOne">3/1 Tempo</option>
+            <option value="fourToOne">4/1 Tempo</option>
+        </select>
+    </div>
+
+    <!-- To use your own sound file:
+         1. Place your sound file (e.g., my-sound.mp3) in the same folder as this HTML file
+         2. Replace the src below with your file name (e.g., src="my-sound.mp3")
+    -->
+    <audio id="dingSound" src="mixkit-elevator-tone-2863.wav"></audio>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const repeatToggle = document.getElementById('repeatToggle');
+        const secondDingSlider = document.getElementById('secondDingSlider');
+        const thirdDingSlider = document.getElementById('thirdDingSlider');
+        const secondDingValue = document.getElementById('secondDingValue');
+        const thirdDingValue = document.getElementById('thirdDingValue');
+        const presetSelect = document.getElementById('presetSelect');
+        const dingSound = document.getElementById('dingSound');
+        let isPlaying = false;
+        let repeatInterval;
+
+        function playSequence() {
+            if (!isPlaying) return;
+            
+            // Play first ding immediately
+            dingSound.currentTime = 0;
+            dingSound.play();
+
+            // Play second ding after first delay
+            setTimeout(() => {
+                if (!isPlaying) return;
+                dingSound.currentTime = 0;
+                dingSound.play();
+
+                // Play third ding after second delay
+                setTimeout(() => {
+                    if (!isPlaying) return;
+                    dingSound.currentTime = 0;
+                    dingSound.play();
+                    
+                    if (repeatToggle.checked && isPlaying) {
+                        // Add 2 second delay before repeating
+                        repeatInterval = setTimeout(playSequence, 2000);
+                    } else {
+                        isPlaying = false;
+                    }
+                }, parseFloat(thirdDingSlider.value) * 1000);
+            }, parseFloat(secondDingSlider.value) * 1000);
+        }
+
+        startButton.addEventListener('click', () => {
+            if (isPlaying) return;
+            isPlaying = true;
+            playSequence();
+        });
+
+        stopButton.addEventListener('click', () => {
+            isPlaying = false;
+            if (repeatInterval) {
+                clearTimeout(repeatInterval);
+            }
+        });
+
+        // Update value displays when sliders change
+        secondDingSlider.addEventListener('input', () => {
+            secondDingValue.textContent = `${secondDingSlider.value}s`;
+            if (presetSelect.value === 'twoToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 2;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'threeToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 3;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'fourToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 4;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            }
+        });
+
+        thirdDingSlider.addEventListener('input', () => {
+            thirdDingValue.textContent = `${thirdDingSlider.value}s`;
+            if (presetSelect.value === 'twoToOne') {
+                const backswingTime = parseFloat(thirdDingSlider.value) * 2;
+                secondDingSlider.value = backswingTime;
+                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'threeToOne') {
+                const backswingTime = parseFloat(thirdDingSlider.value) * 3;
+                secondDingSlider.value = backswingTime;
+                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'fourToOne') {
+                const backswingTime = parseFloat(thirdDingSlider.value) * 4;
+                secondDingSlider.value = backswingTime;
+                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
+            } else {
+                presetSelect.value = 'custom';
+            }
+        });
+
+        presetSelect.addEventListener('change', () => {
+            if (presetSelect.value === 'twoToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 2;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'threeToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 3;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            } else if (presetSelect.value === 'fourToOne') {
+                const impactTime = parseFloat(secondDingSlider.value) / 4;
+                thirdDingSlider.value = impactTime;
+                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
+            }
+        });
+    </script>
+</body>
+</html> 
