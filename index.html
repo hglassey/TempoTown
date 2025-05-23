@@ -142,6 +142,13 @@
             outline: none;
             border-color: #4CAF50;
         }
+        .speed-container {
+            margin: 20px 0;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -161,66 +168,69 @@
             <span>Repeat</span>
         </div>
     </div>
-    
-    <div class="slider-container">
-        <label for="secondDingSlider">Backswing (1.5s - 0.5s):</label>
-        <input type="range" id="secondDingSlider" class="slider" min="0.5" max="1.5" step="0.05" value="1.0">
-        <div class="value-display" id="secondDingValue">1.0s</div>
-    </div>
-    
-    <div class="slider-container">
-        <label for="thirdDingSlider">Impact (1.0s - 0.2s):</label>
-        <input type="range" id="thirdDingSlider" class="slider" min="0.2" max="1.0" step="0.05" value="0.6">
-        <div class="value-display" id="thirdDingValue">0.6s</div>
+
+    <div class="speed-container">
+        <label for="secondSpeedSlider">Second Sound Duration (0.5s - 2.0s):</label>
+        <input type="range" id="secondSpeedSlider" class="slider" min="0.5" max="2.0" step="0.1" value="1.0">
+        <div class="value-display" id="secondSpeedValue">1.0s</div>
+
+        <label for="thirdSpeedSlider">Third Sound Duration (0.5s - 2.0s):</label>
+        <input type="range" id="thirdSpeedSlider" class="slider" min="0.5" max="2.0" step="0.1" value="1.0">
+        <div class="value-display" id="thirdSpeedValue">1.0s</div>
     </div>
 
-    <div class="slider-container">
-        <label for="presetSelect">Preset Tempo:</label>
-        <select id="presetSelect" class="preset-select">
-            <option value="custom">Custom</option>
-            <option value="twoToOne">2/1 Tempo</option>
-            <option value="threeToOne">3/1 Tempo</option>
-            <option value="fourToOne">4/1 Tempo</option>
-        </select>
-    </div>
-
-    <!-- To use your own sound file:
-         1. Place your sound file (e.g., my-sound.mp3) in the same folder as this HTML file
-         2. Replace the src below with your file name (e.g., src="my-sound.mp3")
-    -->
-    <audio id="dingSound" src="mixkit-elevator-tone-2863.wav"></audio>
+    <!-- Sound files for each tone in the sequence -->
+    <audio id="firstSound" src="mixkit-elevator-tone-2863.wav"></audio>
+    <audio id="secondSound" src="fast-whoosh.mp3"></audio>
+    <audio id="thirdSound" src="fast-whoosh.mp3"></audio>
 
     <script>
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
         const repeatToggle = document.getElementById('repeatToggle');
-        const secondDingSlider = document.getElementById('secondDingSlider');
-        const thirdDingSlider = document.getElementById('thirdDingSlider');
-        const secondDingValue = document.getElementById('secondDingValue');
-        const thirdDingValue = document.getElementById('thirdDingValue');
-        const presetSelect = document.getElementById('presetSelect');
-        const dingSound = document.getElementById('dingSound');
+        const secondSpeedSlider = document.getElementById('secondSpeedSlider');
+        const thirdSpeedSlider = document.getElementById('thirdSpeedSlider');
+        const secondSpeedValue = document.getElementById('secondSpeedValue');
+        const thirdSpeedValue = document.getElementById('thirdSpeedValue');
+        const firstSound = document.getElementById('firstSound');
+        const secondSound = document.getElementById('secondSound');
+        const thirdSound = document.getElementById('thirdSound');
         let isPlaying = false;
         let repeatInterval;
+
+        // Update duration displays when sliders change
+        secondSpeedSlider.addEventListener('input', () => {
+            const duration = parseFloat(secondSpeedSlider.value);
+            secondSpeedValue.textContent = `${duration.toFixed(1)}s`;
+        });
+
+        thirdSpeedSlider.addEventListener('input', () => {
+            const duration = parseFloat(thirdSpeedSlider.value);
+            thirdSpeedValue.textContent = `${duration.toFixed(1)}s`;
+        });
 
         function playSequence() {
             if (!isPlaying) return;
             
-            // Play first ding immediately
-            dingSound.currentTime = 0;
-            dingSound.play();
+            // Play first sound immediately
+            firstSound.currentTime = 0;
+            firstSound.play();
 
-            // Play second ding after first delay
+            // Play second sound after first delay
             setTimeout(() => {
                 if (!isPlaying) return;
-                dingSound.currentTime = 0;
-                dingSound.play();
+                secondSound.currentTime = 0;
+                // Convert duration to playback rate (inverse relationship)
+                secondSound.playbackRate = 1 / parseFloat(secondSpeedSlider.value);
+                secondSound.play();
 
-                // Play third ding after second delay
+                // Play third sound after second delay
                 setTimeout(() => {
                     if (!isPlaying) return;
-                    dingSound.currentTime = 0;
-                    dingSound.play();
+                    thirdSound.currentTime = 0;
+                    // Convert duration to playback rate (inverse relationship)
+                    thirdSound.playbackRate = 1 / parseFloat(thirdSpeedSlider.value);
+                    thirdSound.play();
                     
                     if (repeatToggle.checked && isPlaying) {
                         // Add 2 second delay before repeating
@@ -228,8 +238,8 @@
                     } else {
                         isPlaying = false;
                     }
-                }, parseFloat(thirdDingSlider.value) * 1000);
-            }, parseFloat(secondDingSlider.value) * 1000);
+                }, 700); // Fixed 0.7s delay for third sound (0.6s + 0.1s pause)
+            }, 1000); // Fixed 1.0s delay for second sound
         }
 
         startButton.addEventListener('click', () => {
@@ -242,59 +252,6 @@
             isPlaying = false;
             if (repeatInterval) {
                 clearTimeout(repeatInterval);
-            }
-        });
-
-        // Update value displays when sliders change
-        secondDingSlider.addEventListener('input', () => {
-            secondDingValue.textContent = `${secondDingSlider.value}s`;
-            if (presetSelect.value === 'twoToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 2;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'threeToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 3;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'fourToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 4;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
-            }
-        });
-
-        thirdDingSlider.addEventListener('input', () => {
-            thirdDingValue.textContent = `${thirdDingSlider.value}s`;
-            if (presetSelect.value === 'twoToOne') {
-                const backswingTime = parseFloat(thirdDingSlider.value) * 2;
-                secondDingSlider.value = backswingTime;
-                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'threeToOne') {
-                const backswingTime = parseFloat(thirdDingSlider.value) * 3;
-                secondDingSlider.value = backswingTime;
-                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'fourToOne') {
-                const backswingTime = parseFloat(thirdDingSlider.value) * 4;
-                secondDingSlider.value = backswingTime;
-                secondDingValue.textContent = `${backswingTime.toFixed(2)}s`;
-            } else {
-                presetSelect.value = 'custom';
-            }
-        });
-
-        presetSelect.addEventListener('change', () => {
-            if (presetSelect.value === 'twoToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 2;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'threeToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 3;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
-            } else if (presetSelect.value === 'fourToOne') {
-                const impactTime = parseFloat(secondDingSlider.value) / 4;
-                thirdDingSlider.value = impactTime;
-                thirdDingValue.textContent = `${impactTime.toFixed(2)}s`;
             }
         });
     </script>
